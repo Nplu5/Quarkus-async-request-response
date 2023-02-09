@@ -9,12 +9,21 @@ import org.junit.jupiter.api.Test
 class GreetingResourceTest {
 
     @Test
-    fun testHelloEndpoint() {
-        given()
-          .`when`().get("/hello")
+    fun reproduceTimeoutException() {
+        val statusLocation = given()
+          .`when`().post("/greeting")
           .then()
-             .statusCode(200)
-             .body(`is`("Hello from RESTEasy Reactive"))
+            .statusCode(202)
+            .extract()
+            .header("Location")
+
+        Thread.sleep(33000)
+
+        val resultLocation = given()
+            .`when`().get("$statusLocation")
+            .then()
+            .statusCode(200)
+            .body(`is`("Hi Simon I greet you asynchronously!"))
     }
 
 }

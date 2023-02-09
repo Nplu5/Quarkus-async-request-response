@@ -58,6 +58,7 @@ data class Message(val name: String, val id: UUID)
 @ApplicationScoped
 class GreetingService {
 
+
     @ConsumeEvent(value= "greeting", blocking = true)
     fun generateGreeting(message: Message) {
         println("Received Request to generate greeting")
