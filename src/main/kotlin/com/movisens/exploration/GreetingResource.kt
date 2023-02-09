@@ -57,38 +57,13 @@ data class Message(val name: String, val id: UUID)
 
 @ApplicationScoped
 class GreetingService {
-    // TODO: Check why redirect immediately contains quarkus host
-    // TODO: fix:
-    /*
-    023-02-01 17:07:19,614 ERROR [io.qua.mut.run.MutinyInfrastructure] (vert.x-eventloop-thread-2) Mutiny had to drop the following exception: (TIMEOUT,-1) Timed out after waiting 30000(ms) for a reply. address: __vertx.reply.3, repliedAddress: greeting
-	at io.vertx.core.eventbus.impl.ReplyHandler.handle(ReplyHandler.java:76)
-	at io.vertx.core.eventbus.impl.ReplyHandler.handle(ReplyHandler.java:24)
-	at io.vertx.core.impl.VertxImpl$InternalTimerHandler.handle(VertxImpl.java:932)
-	at io.vertx.core.impl.VertxImpl$InternalTimerHandler.handle(VertxImpl.java:903)
-	at io.vertx.core.impl.EventLoopContext.emit(EventLoopContext.java:55)
-	at io.vertx.core.impl.DuplicatedContext.emit(DuplicatedContext.java:158)
-	at io.vertx.core.impl.ContextInternal.emit(ContextInternal.java:194)
-	at io.vertx.core.impl.VertxImpl$InternalTimerHandler.run(VertxImpl.java:921)
-	at io.netty.util.concurrent.PromiseTask.runTask(PromiseTask.java:98)
-	at io.netty.util.concurrent.ScheduledFutureTask.run(ScheduledFutureTask.java:153)
-	at io.netty.util.concurrent.AbstractEventExecutor.runTask(AbstractEventExecutor.java:174)
-	at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:167)
-	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:470)
-	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:569)
-	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)
-	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:829)
-     */
-    // TODO: Check if event bus can be limited in concurrent executions limit worker in thread pool that I can generate:
-    // https://stackoverflow.com/questions/60760290/right-way-to-start-a-worker-thread-with-quarkus
+
     @ConsumeEvent(value= "greeting", blocking = true)
-    fun generateGreeting(message: Message): String{
+    fun generateGreeting(message: Message) {
         println("Received Request to generate greeting")
         Thread.sleep(32000)
         MemoryDatabase.greetings[message.id] = "Hi ${message.name} I greet you asynchronously!"
         println("Generated greeting")
-        return "Random"
     }
 }
 
