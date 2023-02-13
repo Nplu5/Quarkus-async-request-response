@@ -19,11 +19,37 @@ class GreetingResourceTest {
 
         Thread.sleep(33000)
 
-        val resultLocation = given()
-            .`when`().get("$statusLocation")
+        given()
+            .`when`().get(statusLocation)
             .then()
             .statusCode(200)
             .body(`is`("Hi Simon I greet you asynchronously!"))
     }
 
+    @Test
+    fun multipleRequests(){
+        val names = listOf("Simon", "Johannes", "Robert", "Jürgen", "Jörg","Tim")
+        val locations = mutableListOf<String>()
+        for (name in names){
+            given()
+                .`when`().post("/greeting/$name")
+                .then()
+                .statusCode(202)
+                .extract()
+                .header("Location")
+                .let { locations.add(it) }
+        }
+
+        Thread.sleep((locations.size / 2 * 2000).toLong())
+
+        for (location in locations){
+            given()
+                .`when`().get(location)
+                .then()
+                .statusCode(200)
+                .extract()
+                .body().asString()
+                .let { println(it) }
+        }
+    }
 }
