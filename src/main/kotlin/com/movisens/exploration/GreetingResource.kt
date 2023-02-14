@@ -66,25 +66,44 @@ class GreetingResource(val bus: EventBus) {
 data class Message(val name: String, val id: UUID)
 
 @ApplicationScoped
-class GreetingService {
-
-    @Inject
-    @ManagedExecutorConfig(maxAsync = 2, maxQueued = 4, cleared = [ThreadContext.ALL_REMAINING])
-    @NamedInstance("GreetingService")
-    lateinit var configuredCustomExecutor: ManagedExecutor
+class GreetingService(val work: Work) {
 
     @ConsumeEvent(value= "greeting", blocking = false)
     fun generateGreeting(message: Message) {
+        work.doWork(message)
+    }
+}
+interface Work {
+    fun doWork(message: Message)
+}
+
+@ApplicationScoped
+class WorkA : Work {
+    @Inject
+    @ManagedExecutorConfig(maxAsync = 2, maxQueued = 4)
+    @NamedInstance("GreetingService")
+    lateinit var configuredCustomExecutor: ManagedExecutor
+
+    override fun doWork(message: Message) {
         Uni.createFrom()
             .item(message)
             .emitOn(configuredCustomExecutor)
-            .map { internalMessage ->
-                val startTime = Clock.systemUTC().toString()
-                println("Received Request to generate greeting for ${internalMessage.name}")
-                Thread.sleep(2000)
-                MemoryDatabase.greetings[internalMessage.id] = Greeting("Hi ${internalMessage.name} I greet you asynchronously!", startTime)
-                println("Generated greeting for ${internalMessage.name}")
-            }.subscribe()
+            .subscribe()
+            .with(this::generateGreeting, Throwable::printStackTrace)
+    }
+
+    private fun generateGreeting(message: Message): Uni<Void>{
+        val startTime = Clock.systemUTC().instant().toString()
+        println("Work on greeting for ${message.name}")
+        Thread.sleep(2000)
+        val endTime = Clock.systemUTC().instant().toString()
+        MemoryDatabase.greetings[message.id] = Greeting(
+            greeting = "Hi ${message.name} I greet you asynchronously!",
+            startTime = startTime,
+            endTime = endTime
+        )
+        println("Generated greeting for ${message.name}")
+        return Uni.createFrom().voidItem()
     }
 }
 
@@ -92,4 +111,4 @@ object MemoryDatabase {
     val greetings = mutableMapOf<UUID, Greeting>()
 }
 
-data class Greeting(val greeting: String, val startTime: String)
+data class Greeting(val greeting: String, val startTime: String, val endTime: String)

@@ -2,6 +2,8 @@ package com.movisens.exploration
 
 import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
+import java.time.Clock
+import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.`is`
 import org.junit.jupiter.api.Test
 
@@ -31,6 +33,7 @@ class GreetingResourceTest {
         val names = listOf("Simon", "Johannes", "Robert", "Jürgen", "Jörg","Tim")
         val locations = mutableListOf<String>()
         for (name in names){
+            println("Send request for greeting: ${Clock.systemUTC().instant()}")
             given()
                 .`when`().post("/greeting/$name")
                 .then()
@@ -47,8 +50,9 @@ class GreetingResourceTest {
                 .`when`().get(location)
                 .then()
                 .statusCode(200)
+                .body(containsString("I greet you asynchronously!"))
                 .extract()
-                .body().asString()
+                .body().`as`(Greeting::class.java)
                 .let { println(it) }
         }
     }
